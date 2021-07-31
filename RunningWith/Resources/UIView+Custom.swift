@@ -1,15 +1,7 @@
-//
-//  UIView+Custom.swift
-//  RunningWith
-//
-//  Created by DELCROS Jean-baptiste on 04/12/2020.
-//  Copyright © 2020 DELCROS Jean-baptiste. All rights reserved.
-//
-
 import Foundation
 import UIKit
 
-
+/// extension of UIView
 extension UIView {
     
     @IBInspectable
@@ -94,5 +86,50 @@ extension UIView {
                 layer.shadowColor = nil
             }
         }
+    }
+    
+    
+    /// add border on the top of the view
+    /// - Parameters:
+    ///   - color: color of border
+    ///   - width: with of border
+    func addTopBorderWithColor(color: UIColor, width: CGFloat) {
+        let border = CALayer()
+        border.backgroundColor = color.cgColor
+        border.frame = CGRect(x: 0, y: 0, width: self.frame.size.width, height: width)
+        self.layer.addSublayer(border)
+    }
+    
+    /// add border on the right of the view
+    /// - Parameters:
+    ///   - color: color of border
+    ///   - width: with of border
+    func addRightBorderWithColor(color: UIColor, width: CGFloat) {
+        let border = CALayer()
+        border.backgroundColor = color.cgColor
+        border.frame = CGRect(x: self.frame.size.width - width, y: 0, width: width, height: self.frame.size.height)
+        self.layer.addSublayer(border)
+    }
+    
+    /// add border on the bottom of the view
+    /// - Parameters:
+    ///   - color: color of border
+    ///   - width: with of border
+    func addBottomBorderWithColor(color: UIColor, width: CGFloat) {
+        let border = CALayer()
+        border.backgroundColor = color.cgColor
+        border.frame = CGRect(x: 0, y: self.frame.size.height - width, width: self.frame.size.width - 25, height: width)
+        self.layer.addSublayer(border)
+    }
+    
+    /// add border on the left of the view
+    /// - Parameters:
+    ///   - color: color of border
+    ///   - width: with of border
+    func addLeftBorderWithColor(color: UIColor, width: CGFloat) {
+        let border = CALayer()
+        border.backgroundColor = color.cgColor
+        border.frame = CGRect(x: 0, y: 0, width: width, height: self.frame.size.height)
+        self.layer.addSublayer(border)
     }
 }

@@ -1,30 +1,67 @@
-//
-//  AddressViewController.swift
-//  RunningWith
-//
-//  Created by DELCROS Jean-baptiste on 07/06/2021.
-//  Copyright © 2021 DELCROS Jean-baptiste. All rights reserved.
-//
-
 import UIKit
+import MapKit
 
 class AddressViewController: UIViewController {
-
+    // MARK: - IBOutlet
+    var searchBar = UISearchBar()
+    var results: [MKLocalSearchCompletion] = []
+    let completer = MKLocalSearchCompleter()
+    var completionHandler: ((String) -> Void)?
+    
+    // MARK: - Properties
+    @IBOutlet weak var tvAddress: UITableView!
+    
+    // MARK: - Cell Life Cycle
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
+        self.searchBar.sizeToFit()
+        self.searchBar.placeholder = "Search for places"
+        searchBar.delegate = self
+        let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(actionCancel(sender:)))
+        self.navigationItem.titleView = searchBar
+        self.navigationItem.rightBarButtonItem = cancelButton
+        completer.delegate = self
     }
     
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
+    // MARK: - Actions
+    @objc func actionCancel(sender: UIBarButtonItem) {
+        dismiss(animated: false, completion: nil)
     }
-    */
 
+}
+// MARK: - UISearchBarDelegate
+extension AddressViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        self.completer.queryFragment = searchText
+    }
+    
+}
+
+extension AddressViewController: MKLocalSearchCompleterDelegate {
+
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        self.results = completer.results
+        self.tvAddress.reloadData()
+    }
+
+}
+
+extension AddressViewController: UITableViewDelegate, UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return results.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell:UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        cell.textLabel?.text = results[indexPath.row].title
+        cell.detailTextLabel?.text = results[indexPath.row].subtitle
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let address = "\(results[indexPath.row].title) \(results[indexPath.row].subtitle)"
+        completionHandler?(address)
+        dismiss(animated: false, completion: nil)
+    }
+    
 }

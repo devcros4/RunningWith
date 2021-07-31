@@ -1,48 +1,55 @@
-//
-//  Notif.swift
-//  CodaGram
-//
-//  Created by Matthieu PASSEREL on 28/01/2018.
-//  Copyright © 2018 Matthieu PASSEREL. All rights reserved.
-//
-
 import Foundation
 import FirebaseDatabase
-
+/// class of notif entity
 class Notif {
     
-//    private var _ref: DatabaseReference!
-//    private var _id: String!
-//    private var _utilisateur: Utilisateur!
-//    private var _post: Post?
-//    private var _date: Double!
-//    private var _texte: String!
-//    private var _vue: Bool!
-//    
-//    var ref: DatabaseReference { return _ref}
-//    var id: String { return _id}
-//    var utilisateur: Utilisateur { return _utilisateur }
-//    var post: Post? { return _post }
-//    var date: Double { return _date }
-//    var texte: String { return _texte }
-//    var vue: Bool { return _vue}
-//    
-//    init(ref: DatabaseReference, id: String, utilisateur: Utilisateur, post: Post?, date: Double, texte: String, vue: Bool) {
-//        self._ref = ref
-//        self._id = id
-//        self._utilisateur = utilisateur
-//        self._post = post
-//        self._date = date
-//        self._texte = texte
-//        self._vue = vue
-//    }
-//    
-//    func modifierUtilisateur(utilsiateur: Utilisateur) {
-//        self._utilisateur = utilisateur
-//    }
+    let ref: DatabaseReference?
+    let id: String
+    var run: Run?
+    var date: Double
+    var titre: String
+    var texte: String
+    var view: Bool
+    
+    init(run: Run?, date: Double, titre: String, texte: String, id: String = "") {
+        self.ref = nil
+        self.id = id
+        self.run = run
+        self.date = date
+        self.titre = titre
+        self.texte = texte
+        self.view = false
+    }
+    
+    init?(snapshot: DataSnapshot, run: Run?) {
+        guard
+            let value = snapshot.value as? [String: AnyObject],
+            let date = value["date"] as? Double,
+            let titre = value["titre"] as? String,
+            let texte = value["texte"] as? String,
+            let view = value["view"] as? Bool
+            else {
+                return nil
+        }
+        self.ref = snapshot.ref
+        self.id = snapshot.key
+        self.date = date
+        self.titre = titre
+        self.texte = texte
+        self.view = view
+        if let theRun = run {
+            self.run = theRun
+        }
+    }
+    
+    func toAnyObject() -> [String: AnyObject] {
+        return [
+            "titre": self.titre as AnyObject,
+            "date": self.date as AnyObject,
+            "texte": self.texte as AnyObject,
+            "view": self.view as AnyObject,
+            "run": self.run?.id as AnyObject
+        ]
+    }
     
 }
-
-
-
-

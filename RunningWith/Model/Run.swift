@@ -1,7 +1,6 @@
-
 import UIKit
 import FirebaseDatabase
-
+/// class of run entity
 class Run {
     
     let ref: DatabaseReference?
@@ -10,13 +9,13 @@ class Run {
     var date: Double
     var address: String
     var speed: Double
-    var duration: Double
     var distance: Double
-    var level: String
+    var imageUrl: String
+    var description: String
     var creator: User
     var runners: [User]
     
-    init(titre: String, date: Double, address: String, speed: Double, duration: Double, distance: Double, level: String, creator: User, runners: [User], id: String = "") {
+    init(titre: String, date: Double, address: String, speed: Double, distance: Double, imageUrl: String, description: String, creator: User, runners: [User], id: String = "") {
         self.ref = nil
         self.id = id
         self.creator = creator
@@ -25,9 +24,9 @@ class Run {
         self.date = date
         self.address = address
         self.speed = speed
-        self.duration = duration
         self.distance = distance
-        self.level = level
+        self.imageUrl = imageUrl
+        self.description = description
     }
     
     init(ref: DatabaseReference, id: String, creator: User, runners: [User], dict: [String: AnyObject]) {
@@ -39,23 +38,21 @@ class Run {
         self.date = dict["date"] as? Double ?? 0
         self.address = dict["address"] as? String ?? ""
         self.speed = dict["speed"] as? Double ?? 0
-        self.duration = dict["duration"] as? Double ?? 0
         self.distance = dict["distance"] as? Double ?? 0
-        self.level = dict["level"] as? String ?? ""
+        self.imageUrl = dict["imageUrl"] as? String ?? ""
+        self.description = dict["description"] as? String ?? ""
     }
     
-    init?(snapshot: DataSnapshot) {
+    init?(snapshot: DataSnapshot, creator: User, runners: [User]) {
         guard
             let value = snapshot.value as? [String: AnyObject],
-            let creator = value["creator"] as? String,
             let titre = value["titre"] as? String,
             let date = value["date"] as? Double,
             let address = value["address"] as? String,
             let speed = value["speed"] as? Double,
-            let duration = value["duration"] as? Double,
             let distance = value["distance"] as? Double,
-            let level = value["level"] as? String,
-            let runners = value["runners"] as? [String]
+            let imageUrl = value["imageUrl"] as? String,
+            let description = value["description"] as? String
             else {
                 return nil
         }
@@ -66,18 +63,11 @@ class Run {
         self.date = date
         self.address = address
         self.speed = speed
-        self.duration = duration
         self.distance = distance
-        self.level = level
-        self.runners = []
-        self.creator = User(email: "", username: "", nom: "", prenom: "", imageUrl: "")
-//        if let user = self.getUsers(usersID: [creator]).first {
-//            self.creator = user
-//        }
-//        self.runners = getUsers(usersID: runners)
-        
-        
-        
+        self.runners = runners
+        self.imageUrl = imageUrl
+        self.description = description
+        self.creator = creator
     }
     
     func toAnyObject() -> [String: AnyObject] {
@@ -86,11 +76,11 @@ class Run {
             "date": self.date as AnyObject,
             "address": self.address as AnyObject,
             "speed": self.speed as AnyObject,
-            "duration": self.duration as AnyObject,
             "distance": self.distance as AnyObject,
-            "level": self.level as AnyObject,
             "creator": self.creator.id as AnyObject,
-            "runners": self.todic() as AnyObject
+            "runners": self.todic() as AnyObject,
+            "imageUrl": self.imageUrl as AnyObject,
+            "description": self.description as AnyObject
         ]
     }
     func todic() -> [String: Bool] {
@@ -101,15 +91,21 @@ class Run {
         return dicRunners
     }
     
-    func getUsers(usersID: [String]) -> [User] {
+    func getUsers(usersID: [String],  completion: @escaping ([User]) -> Void) {
         var users: [User] = []
-        usersID.forEach { (userID) in
-            BDD().getUser(id: userID, completion: { (user) -> (Void) in
-                if let user = user {
-                    users.append(user)
-                }
-            })
+        let group = DispatchGroup()
+            usersID.forEach { (userID) in
+                group.enter()
+                BDD().getUser(id: userID, completion: { (user) -> Void in
+                    if let user = user {
+                        users.append(user)
+                        group.leave()
+                    }
+                })
+            }
+        group.notify(queue: .main) {
+            completion(users)
         }
-        return users
+        completion(users)
     }
 }

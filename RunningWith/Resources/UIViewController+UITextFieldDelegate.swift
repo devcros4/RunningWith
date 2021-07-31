@@ -1,9 +1,15 @@
-//
-//  UIViewController+UITextFieldDelegate.swift
-//  RunningWith
-//
-//  Created by DELCROS Jean-baptiste on 25/05/2021.
-//  Copyright © 2021 DELCROS Jean-baptiste. All rights reserved.
-//
-
 import Foundation
+import UIKit
+
+// MARK: - UITextFieldDelegate
+extension UIViewController: UITextFieldDelegate {
+        
+    /// Called when 'return' key pressed. close keybord
+    /// - Parameter textField: textfield
+    /// - Returns: true
+    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        self.view.endEditing(true)
+        return true
+    }
+}

@@ -1,11 +1,3 @@
-//
-//  AppDelegate.swift
-//  RunningWith
-//
-//  Created by DELCROS Jean-baptiste on 21/10/2020.
-//  Copyright © 2020 DELCROS Jean-baptiste. All rights reserved.
-//
-
 import UIKit
 import Firebase
 import FirebaseDatabase
@@ -13,16 +5,9 @@ import FirebaseDatabase
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         FirebaseApp.configure()
-        // Checking if unit tests are running
-        if ProcessInfo.processInfo.environment["unit_tests"] == "true" {
-          print("Setting up Firebase emulator localhost:8080")
-            Database.database(url: "http://localhost:9000")
-        }
         return true
     }
 
@@ -42,4 +27,3 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
 }
-

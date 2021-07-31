@@ -1,11 +1,3 @@
-//
-//  SceneDelegate.swift
-//  RunningWith
-//
-//  Created by DELCROS Jean-baptiste on 21/10/2020.
-//  Copyright © 2020 DELCROS Jean-baptiste. All rights reserved.
-//
-
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
@@ -50,4 +42,3 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
 }
-

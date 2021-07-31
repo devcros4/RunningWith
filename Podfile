@@ -7,15 +7,16 @@ target 'RunningWith' do
 
   # Pods for RunningWith
   pod 'Firebase/Analytics'
-  pod 'Firebase/Core'
   pod 'Firebase/Auth'
   pod 'Firebase/Database'
+  pod 'Firebase/Core'
   pod 'Firebase/Storage'
+  pod 'SDWebImage'
+  pod 'GeoFire', '~> 4.0'
   
   target 'RunningWithTests' do
     inherit! :search_paths
     # Pods for testing
-
   end
 
 end

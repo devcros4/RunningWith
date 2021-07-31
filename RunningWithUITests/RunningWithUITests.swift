@@ -26,10 +26,42 @@ class RunningWithUITests: XCTestCase {
     func testExample() throws {
         // UI tests must launch the application that they test.
         let app = XCUIApplication()
+        var launchArguments: [AnyHashable] = []
+        launchArguments.append("-AppleInterfaceStyle")
+        launchArguments.append("Dark")
+        app.launchArguments = launchArguments as! [String]
         app.launch()
-
-        // Use recording to get started writing UI tests.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        setupSnapshot(app)
+        app.buttons["Log in"].tap()
+        let tfEmail = app.textFields["Email"]
+        tfEmail.tap()
+        tfEmail.typeText("jbdelcros4@hotmail.fr")
+        let tfPassword = app.secureTextFields["password"]
+        tfPassword.tap()
+        tfPassword.typeText("Azerty")
+        XCUIApplication()/*@START_MENU_TOKEN@*/.buttons["Done"]/*[[".keyboards",".buttons[\"terminé\"]",".buttons[\"Done\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/.tap()
+        app.buttons["Sign In"].tap()
+        snapshot("Find", timeWaitingForIdle: 5)
+        let findNavigationBar = app.navigationBars["Find"]
+        findNavigationBar.children(matching: .button).element(boundBy: 0).tap()
+        snapshot("Profil", timeWaitingForIdle: 5)
+        app.navigationBars["Profil"].buttons["Find"].tap()
+        findNavigationBar.children(matching: .button).element(boundBy: 1).tap()
+        snapshot("Filter", timeWaitingForIdle: 1)
+        app.navigationBars["Filter"].buttons["Find"].tap()
+        findNavigationBar.children(matching: .button).element(boundBy: 2).tap()
+        snapshot("Notifs", timeWaitingForIdle: 5)
+        app.navigationBars["Notification"].buttons["Find"].tap()
+        let tabBar = app.tabBars["Tab Bar"]
+        tabBar.buttons["Create"].tap()
+        snapshot("Create", timeWaitingForIdle: 5)
+        tabBar.buttons["Runs"].tap()
+        app/*@START_MENU_TOKEN@*/.buttons["Created"]/*[[".segmentedControls.buttons[\"Created\"]",".buttons[\"Created\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.tap()
+        snapshot("Runs", timeWaitingForIdle: 5)
+        app.cells["runCell"].firstMatch.tap()
+        snapshot("Run", timeWaitingForIdle: 5)
+        
+                
     }
 
     func testLaunchPerformance() throws {
@@ -38,6 +70,20 @@ class RunningWithUITests: XCTestCase {
             measure(metrics: [XCTApplicationLaunchMetric()]) {
                 XCUIApplication().launch()
             }
+        }
+    }
+}
+
+
+
+extension XCUIElement {
+    func forceTapElement() {
+        if self.isHittable {
+            self.tap()
+        }
+        else {
+            let coordinate: XCUICoordinate = self.coordinate(withNormalizedOffset: CGVector(dx:0.0, dy:0.0))
+            coordinate.tap()
         }
     }
 }

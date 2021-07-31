@@ -1,23 +1,15 @@
-
-
 import Foundation
 import Firebase
-
+/// class of user entity
 struct User {
     
     let ref: DatabaseReference?
     let id: String
-    let email: String
-    let username: String
-    let nom: String
-    let prenom: String
-    let imageUrl: String
-    
-    //    init(authData: Firebase.User) {
-    //        self.id = authData.uid
-    //        self.email = authData.email!
-    //    }
-    //
+    var email: String
+    var username: String
+    var nom: String
+    var prenom: String
+    var imageUrl: String
     
     init(email: String, username: String, nom: String, prenom: String, imageUrl: String, id: String = "") {
         self.ref = nil

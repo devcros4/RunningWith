@@ -1,18 +1,16 @@
-//
-//  FindViewController.swift
-//  RunningWith
-//
-//  Created by DELCROS Jean-baptiste on 09/01/2021.
-//  Copyright © 2021 DELCROS Jean-baptiste. All rights reserved.
-//
-
 import UIKit
+import CoreLocation
 
 class FindViewController: UIViewController {
     
-    // MARK: 
+    // MARK: - Properties
     let runCellId = "RunTableViewCell"
     var runs: [Run] = []
+    var runSelected: Run?
+    let locationManager = CLLocationManager()
+    var filterStartDate: Double?
+    var filterEndDate: Double?
+    var filterDistanceMax: Int?
     
     // MARK: - Outlets
     @IBOutlet weak var tableView: UITableView!
@@ -20,41 +18,55 @@ class FindViewController: UIViewController {
     @IBOutlet weak var lbLoading: UILabel!
     @IBOutlet weak var lbInfoNoRace: UILabel!
     
+    // MARK: - View Life Cycle
     override func viewDidLoad() {
         super.viewDidLoad()
         self.tableView.register(UINib.init(nibName: self.runCellId, bundle: nil), forCellReuseIdentifier: self.runCellId)
         self.tableView.rowHeight = 110
-        self.tableView.separatorColor = UIColor.clear
-        self.getRuns()
+        self.locationManager.delegate = self
+        self.locationManager.requestWhenInUseAuthorization()
+        self.navigationController!.navigationBar.prefersLargeTitles = true
+
     }
     
-    private func getRuns() {
-        self.runs = []
-        self.tableView.isHidden = true
-        self.lbInfoNoRace.isHidden = true
-        self.activityIndicator.startAnimating()
-        self.lbLoading.isHidden = false
-        BDD().getAllRuns { (runsRecover) -> Void in
-            if let runsReal = runsRecover {
-                print(runsReal)
-                self.runs = runsReal
-                print(self.runs.count)
-                self.tableView.reloadData()
-                self.activityIndicator.stopAnimating()
-                self.lbLoading.isHidden = true
+    override func viewWillAppear(_ animated: Bool) {
+        // Request a user’s location once
+        locationManager.requestLocation()
+    }
+    
+    // MARK: - Navigation
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "openRun" {
+            if let nextViewController = segue.destination as? RunViewController {
+                nextViewController.run = runSelected
+            }
+        } else if segue.identifier == "segueFilter" {
+            if let nextViewController = segue.destination as? FilterViewController {
+                if let startDate = self.filterStartDate {
+                    nextViewController.oldStartDate = startDate
+                }
+                if let endDate = self.filterEndDate {
+                    nextViewController.oldEndDate = endDate
+                }
+                if let distanceMax = self.filterDistanceMax {
+                    nextViewController.oldDistanceMax = distanceMax
+                }
+                nextViewController.completionHandler = { (startDate, endDate, distanceMax) in
+                    self.filterDistanceMax = distanceMax
+                    self.filterStartDate = startDate
+                    self.filterEndDate = endDate
+                }
             }
         }
     }
     
+    // MARK: - Actions
+    @IBAction func unwind( _ seg: UIStoryboardSegue) {}
     
 }
-
+// MARK: - UITableViewDelegate, UITableViewDataSource
 extension FindViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if self.runs.isEmpty {
-            tableView.isHidden = true
-            self.lbInfoNoRace.isHidden = false
-        }
         return self.runs.count
     }
     
@@ -64,7 +76,45 @@ extension FindViewController: UITableViewDelegate, UITableViewDataSource {
         cell?.awakeFromNib()
         return cell!
     }
+    
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return "Runs"
+        return "Runs available"
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        self.runSelected = runs[indexPath.row]
+        performSegue(withIdentifier: "openRun", sender: nil)
+    }
+}
+// MARK: - CLLocationManagerDelegate
+extension FindViewController: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.first {
+            self.runs = []
+            BDD().findRuns(location: location, startDate: self.filterStartDate, endDate: self.filterEndDate, distanceMax: self.filterDistanceMax) { (theRun) in
+                    if let run = theRun {
+                        if let index = self.runs.firstIndex(where: {$0.id == run.id}) {
+                            self.runs[index] = run
+                        } else {
+                            self.runs.append(run)
+                        }
+                    }
+                    self.activityIndicator.stopAnimating()
+                    self.lbLoading.isHidden = true
+                    if self.runs.isEmpty {
+                        self.lbInfoNoRace.isHidden = false
+                        self.tableView.isHidden = true
+                    } else {
+                        self.lbInfoNoRace.isHidden = true
+                        self.tableView.isHidden = false
+                    }
+                self.runs = self.runs.sorted(by: {$0.date < $1.date})
+                self.tableView.reloadData()
+            }
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print(error)
     }
 }

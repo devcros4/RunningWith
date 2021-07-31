@@ -1,9 +1,12 @@
-//
-//  DateFormatter.swift
-//  RunningWith
-//
-//  Created by DELCROS Jean-baptiste on 07/06/2021.
-//  Copyright © 2021 DELCROS Jean-baptiste. All rights reserved.
-//
-
 import Foundation
+
+extension DateFormatter {
+    
+    /// dateFormater format: "HH:mm dd-MM-yyyy"
+    static let full: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm dd-MM-yyyy"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter
+    }()
+}

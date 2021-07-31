@@ -1,129 +1,173 @@
-//
-//  ViewController.swift
-//  RunningWith
-//
-//  Created by DELCROS Jean-baptiste on 21/10/2020.
-//  Copyright © 2020 DELCROS Jean-baptiste. All rights reserved.
-//
-
 import UIKit
 import AVFoundation
 import FirebaseAuth
 import AuthenticationServices
+import CryptoKit
 
 class AuthenticationViewController: UIViewController {
     
+    // MARK: - Outlets
     @IBOutlet weak var icon: UIImageView!
     @IBOutlet weak var appName: UILabel!
     @IBOutlet weak var joinBtn: UIButton!
     @IBOutlet weak var logInBtn: UIButton!
-    var user1: User?
-    var user3: User?
+    @IBOutlet weak var signInWithAppleBtn: UIButton!
+    @IBOutlet weak var stackView: UIStackView!
+    
+    // Unhashed nonce.
+    fileprivate var currentNonce: String?
     
     
+    // MARK: - View Life Cycle
     override func viewDidAppear(_ animated: Bool) {
-        print("oooo")
         Auth.auth().addStateDidChangeListener() { auth, user in
-          if user != nil {
-            BDD().getUser(id: user!.uid) { (user) -> () in
-                                    if user != nil {
-                                            currentUser = user
-                                        }
-                self.performSegue(withIdentifier: "Authentification", sender: nil)
-
-                                    }
-          }
+            if user != nil {
+                BDD().getUser(id: user!.uid) { (user) -> Void in
+                    if user != nil {
+                        currentUser = user
+                        self.performSegue(withIdentifier: "Authentification", sender: nil)
+                    }
+                }
+            }
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
-        
-        print("okok")
-        BDD().signOut { (success, error) -> () in
-            if success ?? false {
-                print("yes")
-            } else {
-                print(error?.debugDescription)
-            }
-        }
-        
-        
-        
-//        BDD().createUserForAuthentification(email: "t@hotmail.fr", password: "azerty") { (user, error) in
-//            if let erreur = error {
-//                Alerte().erreurSimple(controller: self, message: erreur.localizedDescription)
-//            }
-//            if user != nil {
-//                BDD().signIn(email: "t@hotmail.fr", password: "azerty") { (user, error) in
-//                    if let realUser = user {
-//                        print(user?.user.email)
-//                        BDD().getUser(id: realUser.user.uid) { (user) -> (Void) in
-//                            if user != nil {
-//                                print(user?.id)
-//                                currentUser = user
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-        // MARK: Creation et recuperation d'un user.
-//        user1 = User(email: "rgrtgt", username: "rtgtr", nom: "gthythy", prenom: "hyhy", imageUrl: "ythyhhyt")
-//        BDD().createOrUpdateUser(dict: user1!.toAnyObject()) { (user) -> (Void) in
-//            if let user = user {
-//                self.user1 = user
-//                currentUser = user
-//            }
-//        }
-//        user3 = User(email: "aaaaa", username: "eeeeee", nom: "rffrfrr", prenom: "aaaaaa", imageUrl: "aaaaa")
-//        BDD().createOrUpdateUser(dict: user3!.toAnyObject()) { (user) -> (Void) in
-//            if let user = user {
-//                self.user3 = user
-//            }
-//        }
-        BDD().getAllUser { (users) -> Void in
-            self.user1 = users![1]
-            self.user3 = users![2]
-            currentUser = users![2]
-            print(currentUser)
-        }
-        
-        //        BDD().createOrUpdateUser(dict: ["email": "ok" as AnyObject]) { (user) -> (Void) in
-        //            print(user)
-        //            print("test")
-        //        }
-        //        BDD().getUser(id: "CZVVCG50gCdhgsQzhMkhGSKRzXp2") { (user) -> (Void) in
-        //            print(user?.ref)
-        //            user?.ref?.removeValue()
-        //        }
-        //        BDD().getUser(id: "ok") { (user) -> (Void) in
-        //            print(user?.ref)
-        //            user?.ref?.removeValue()
-        //        }
-        //        BDD().signOut { (success, error) -> (Void) in
-        //            print(success)
-        //        }
+        // sign in with apple button
+        let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
+        button.addTarget(self, action: #selector(startSignInWithAppleFlow), for: .touchUpInside)
+        button.frame = CGRect(x: 0, y: 0, width: 382, height: 56)
+        button.heightAnchor.constraint(equalToConstant: 56).isActive = true
+        stackView.insertArrangedSubview(button, at: 1)
     }
     
-//    @IBAction func addrun(_ sender: UIBarButtonItem) {
-//        print(currentUser)
-//        BDD().createRun(run: Run(titre: "monday", date: Double(12), address: "mdm", speed: Double(14), duration: Double(45), distance: Double(5), level: "good", creator: user1!, runners: [user3!]))
-//        BDD().getAllRuns { (runs) -> (Void) in
-//            print(runs?.count)
-//            runs?.forEach({ (run) in
-//                print(run.titre)
-//            })
-//        }
-//        BDD().getRunsJoinByUser { (runs) -> (Void) in
-//            print(runs?.count)
-//            runs?.forEach({ (run) in
-//                print(run)
-//            })
-//        }
-//    }
-    override func viewDidDisappear(_ animated: Bool) {
+
+    // MARK: - SignInWithApple
+    @available(iOS 13, *)
+    @objc func startSignInWithAppleFlow() {
+      let nonce = randomNonceString()
+      currentNonce = nonce
+      let appleIDProvider = ASAuthorizationAppleIDProvider()
+      let request = appleIDProvider.createRequest()
+      request.requestedScopes = [.fullName, .email]
+      request.nonce = sha256(nonce)
+
+      let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+      authorizationController.delegate = self
+      authorizationController.presentationContextProvider = self
+      authorizationController.performRequests()
     }
+
+    /// encode string in sha256 type
+    @available(iOS 13, *)
+    private func sha256(_ input: String) -> String {
+      let inputData = Data(input.utf8)
+      let hashedData = SHA256.hash(data: inputData)
+      let hashString = hashedData.compactMap {
+        return String(format: "%02x", $0)
+      }.joined()
+
+      return hashString
+    }
+
+    
+    // Adapted from https://auth0.com/docs/api-auth/tutorials/nonce#generate-a-cryptographically-random-nonce
+    private func randomNonceString(length: Int = 32) -> String {
+      precondition(length > 0)
+      let charset: Array<Character> =
+          Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+      var result = ""
+      var remainingLength = length
+      while remainingLength > 0 {
+        let randoms: [UInt8] = (0 ..< 16).map { _ in
+          var random: UInt8 = 0
+          let errorCode = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
+          if errorCode != errSecSuccess {
+            fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)")
+          }
+          return random
+        }
+        randoms.forEach { random in
+          if remainingLength == 0 {
+            return
+          }
+          if random < charset.count {
+            result.append(charset[Int(random)])
+            remainingLength -= 1
+          }
+        }
+      }
+      return result
+    }
+
 }
 
+// MARK: - ASAuthorizationControllerDelegate
+extension AuthenticationViewController: ASAuthorizationControllerDelegate {
+
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential {
+            guard let nonce = currentNonce else {
+                fatalError("Invalid state: A login callback was received, but no login request was sent.")
+            }
+            guard let appleIDToken = appleIDCredential.identityToken else {
+                print("Unable to fetch identity token")
+                return
+            }
+            guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
+                print("Unable to serialize token string from data: \(appleIDToken.debugDescription)")
+                return
+            }
+            // Initialize a Firebase credential.
+            let credential = OAuthProvider.credential(withProviderID: "apple.com",
+                                                      idToken: idTokenString,
+                                                      rawNonce: nonce)
+            // Sign in with Firebase.
+            Auth.auth().signIn(with: credential) { (authResult, error) in
+                if (error != nil) {
+                    // Error. If error.code == .MissingOrInvalidNonce, make sure
+                    // you're sending the SHA256-hashed nonce as a hex string with
+                    // your request to Apple.
+                    print(error?.localizedDescription ?? "")
+                    return
+                }
+                guard let user = authResult?.user else { return }
+                var notExiste = false
+                var i = 1
+                repeat {
+                    var username: String {
+                        return "\(user.displayName ?? "Runner")\(i)"
+                    }
+                    BDD().usernameAlreadyExiste(username: username) { (existe, errorMessage) -> Void in
+                        if let existe =  existe, existe {
+                            notExiste = existe
+                        } else {
+                            let newUser = User(email: user.email ?? "", username: username, nom: user.displayName ?? "", prenom: "", imageUrl: "")
+                            BDD().createOrUpdateUser(user: newUser) { (myUser) -> Void in
+                                if let userr = myUser {
+                                    currentUser = userr
+                                    notExiste = false
+                                }
+                            }
+                        }
+                    }
+                        i += 1
+                    }  while notExiste
+            }
+        }
+    }
+
+    func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+      // Handle error.
+      print("Sign in with Apple errored: \(error)")
+    }
+
+}
+
+// MARK: - ASAuthorizationControllerPresentationContextProviding
+extension AuthenticationViewController: ASAuthorizationControllerPresentationContextProviding {
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+           return self.view.window!
+    }
+}
