@@ -1,9 +1,33 @@
 {
   "images" : [
     {
-      "filename" : "icons8-fermer-la-fenêtre-51.png",
       "idiom" : "universal",
       "scale" : "1x"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "light"
+        }
+      ],
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "icons8-fermer-la-fenêtre-51.png",
+      "idiom" : "universal",
+      "scale" : "2x"
     },
     {
       "appearances" : [
@@ -14,7 +38,7 @@
       ],
       "filename" : "icons8-fermer-la-fenêtre-52.png",
       "idiom" : "universal",
-      "scale" : "1x"
+      "scale" : "2x"
     },
     {
       "appearances" : [
@@ -24,30 +48,6 @@
         }
       ],
       "filename" : "icons8-fermer-la-fenêtre-50(1).png",
-      "idiom" : "universal",
-      "scale" : "1x"
-    },
-    {
-      "idiom" : "universal",
-      "scale" : "2x"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "light"
-        }
-      ],
-      "idiom" : "universal",
-      "scale" : "2x"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "dark"
-        }
-      ],
       "idiom" : "universal",
       "scale" : "2x"
     },
